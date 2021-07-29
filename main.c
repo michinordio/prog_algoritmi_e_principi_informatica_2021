@@ -1,5 +1,5 @@
 #include<stdio.h>
-//#include<time.h>
+#include<time.h>
 #include <stdlib.h>
 typedef struct nodo{
     __uint32_t w;
@@ -133,7 +133,8 @@ __uint64_t dijkstra(int dim, __uint32_t m[dim][dim]){
 
 int main()
 {
-    int dim=0, k=0;
+    clock_t time = clock();
+    int dim = 0, k = 0;
     __uint64_t path=0; path++; //da eliminare
     int i = 0, j=0;
     //prendo in ingresso dim
@@ -189,17 +190,15 @@ int main()
             }
             insertPath(dijkstra(dim, m),&lista_mat,&p);
             p.n++;
-        }
-        else if (f == 'T'){
-            if(p.n!=0){
+        } else if (f == 'T') {
+            if (p.n != 0) {
                 printTopk(&p);
-            }
-            else printf("\n");
+            } else printf("\n");
             fseek(stdin, 4, SEEK_CUR);
         }
         f = getchar();
     }
 
-    //printf("\n\ntime: %f\n", (float) (clock()-time)/CLOCKS_PER_SEC);   //stampa pathsum e tempo impiegato
+    printf("exec time: %f s\n", (float) (clock() - time) / CLOCKS_PER_SEC);   //stampa pathsum e tempo impiegato
     return 0;
 }
