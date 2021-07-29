@@ -5,14 +5,14 @@
 #define cleard d[0] = 0;d[1] = 0;d[2] = 0;d[3] = 0;d[4] = 0;d[5] = 0;d[6] = 0;d[7] = 0;d[8] = 0;d[9] = 0;
 // dijkstra priority queue node struct
 typedef struct pqueue_node {
-    __uint32_t w;
-    __uint8_t visited;
-    __uint16_t key;
+    u_int32_t w;
+    u_int8_t visited;
+    u_int16_t key;
 } pqueue_node;
 // graph topK ranking node struct
 typedef struct topk_node {
-    __uint32_t key;
-    __uint64_t w;
+    u_int32_t key;
+    u_int64_t w;
     struct topk_node *next;
 } topk_node;
 //graph topK ranking head
