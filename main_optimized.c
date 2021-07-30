@@ -5,14 +5,14 @@
 #define cleard d[0] = 0;d[1] = 0;d[2] = 0;d[3] = 0;d[4] = 0;d[5] = 0;d[6] = 0;d[7] = 0;d[8] = 0;d[9] = 0;
 // dijkstra priority queue node struct
 typedef struct pqueue_node {
-    u_int32_t w;
-    u_int8_t visited;
-    u_int16_t key;
+    __uint32_t w;
+    __uint8_t visited;
+    __uint16_t key;
 } pqueue_node;
 // graph topK ranking node struct
 typedef struct topk_node {
-    u_int32_t key;
-    u_int64_t w;
+    __uint32_t key;
+    __uint64_t w;
     struct topk_node *next;
 } topk_node;
 //graph topK ranking head
@@ -23,11 +23,11 @@ typedef struct topk_head {
 } topk_head;
 
 // fast atoi declaration, to be inlined by gcc, callable function won't be compiled
-inline static u_int32_t fastAtoi(const char *str)__attribute__((always_inline));
+inline static __uint32_t fastAtoi(const char *str)__attribute__((always_inline));
 
 // atoi conversion using binary shifting
-u_int32_t fastAtoi(const char *str) {
-    u_int32_t val = 0;
+__uint32_t fastAtoi(const char *str) {
+    __uint32_t val = 0;
 
     while (*str) val = (val << 3) + (val << 1) + (*str++ - '0');
     return val;
@@ -35,8 +35,8 @@ u_int32_t fastAtoi(const char *str) {
 
 //inserisce in *indmin topk_head'indice del pqueue_node non visitato con peso minore
 int sortMin(pqueue_node *q, int dim) {
-    u_int8_t flag = 0;
-    u_int32_t min_index = 0;
+    __uint8_t flag = 0;
+    __uint32_t min_index = 0;
 
     for (int j = 1; j < dim; j++) {
         if (q[j].w != 0) {
@@ -63,7 +63,7 @@ int sortMin(pqueue_node *q, int dim) {
 }
 
 // insert a graph in topk ranking
-void insertTopK(u_int64_t pathlength, topk_node **graph, topk_head *head) {
+void insertTopK(__uint64_t pathlength, topk_node **graph, topk_head *head) {
     topk_node *max;
     max = head->topk_list;
     if (head->n < head->k) {
@@ -104,9 +104,9 @@ void printTopk(topk_head *p) {
     printf("\n");
 }
 
-u_int64_t dijkstra(u_int32_t dim, u_int32_t m[dim][dim]) {
-    u_int64_t pathsum = 0;
-    u_int32_t min_index = 0, countvisited = dim;
+__uint64_t dijkstra(__uint32_t dim, __uint32_t m[dim][dim]) {
+    __uint64_t pathsum = 0;
+    __uint32_t min_index = 0, countvisited = dim;
 
 //prio_queue allocation
     pqueue_node *q;
@@ -142,7 +142,7 @@ u_int64_t dijkstra(u_int32_t dim, u_int32_t m[dim][dim]) {
 
 int main() {
     clock_t time = clock();
-    u_int32_t dim = 0, k = 0;
+    __uint32_t dim = 0, k = 0;
     int i = 0, j = 0;
     char d[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     char f, t;
@@ -172,7 +172,7 @@ int main() {
     p.k = k;
     p.n = 0;
 //graph cache allocation
-    u_int32_t m[dim][dim];
+    __uint32_t m[dim][dim];
 //file parsing
     f = getchar_unlocked();
     while (f != EOF) {
@@ -182,7 +182,7 @@ int main() {
             cleard
             for (i = 0; i < dim; i++) {
                 for (j = 0; j < dim; j++) {
-                    u_int8_t flag = 0;
+                    __uint8_t flag = 0;
                     for (int c = 0; c < 10 && flag == 0; c++) {
                         t = getchar_unlocked();
                         if (t != ',' && t != '\n' && t != EOF) d[c] = t;
@@ -194,7 +194,7 @@ int main() {
                 }
             }
             //exec dijkstra and store result in topk_list
-            insertPath(dijkstra(dim, m), &lista_mat, &p);
+            insertTopK(dijkstra(dim, m), &lista_mat, &p);
             p.n++;
         }
             //TopK command handler
