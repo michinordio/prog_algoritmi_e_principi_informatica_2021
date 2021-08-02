@@ -1,5 +1,5 @@
 #include<stdio.h>
-//#include<time.h>
+#include<time.h>
 #include <stdlib.h>
 typedef struct nodo{
     __uint32_t w;
@@ -17,8 +17,21 @@ typedef struct l{
     int k;
 } lista;
 
+inline static __uint32_t convert(char s[], int dim)__attribute__((always_inline));
+
+__uint32_t convert(char s[], int dim)
+{
+    __uint32_t n=0;
+    for(int i=0; i<dim && s[i]!=0; i++)
+    {
+        n=(n<<1)+(n<<3)+((int)s[i]-48);
+    }
+
+    return n;
+}
+
 //inserisce in *indmin l'indice del nodo non visitato con peso minore
-int sortMin(nodo_t *q, int dim){
+int sortMin(nodo_t *q, __uint64_t dim){
     __uint8_t flag=0;
     int indmin=0;
     for(int j=1; j<dim; j++)
@@ -99,20 +112,20 @@ void printTopk(lista *p){
     printf("\n");
 }
 
-__uint64_t dijkstra(int dim, __uint32_t m[dim][dim]){
+__uint64_t dijkstra(__uint32_t dim, __uint32_t m[dim][dim]){
     __uint64_t pathsum=0;
-    int indmin=0, countvisited=dim;
+    __uint32_t indmin=0, countvisited=dim;
     nodo_t *q;
+    __uint32_t i=0, j=0;
 
     q = malloc((dim)*sizeof(nodo_t));          //alloco spazio per la coda
     q[0].w=0; q[0].visited=1; q[0].key=0;      //inizializzo nodo 0 in coda
-    for(int i=0; i<dim; i++)                    //inizializzo altri nodi in coda inserendo la prima riga della matrice
+    for(i=0; i<dim; i++)                    //inizializzo altri nodi in coda inserendo la prima riga della matrice
     {
         q[i].w=m[0][i];
         q[i].visited=0;
         q[i].key=i;
     }
-    int j;
     while(countvisited!=0)
     {
         indmin = sortMin(q,dim);             //funzione che salva in indmin l'indice del nodo con peso minore
@@ -126,33 +139,36 @@ __uint64_t dijkstra(int dim, __uint32_t m[dim][dim]){
         //for(int k=0; k<dim; k++) {printf("%d ", q[k].w);}       //stampo i pesi dei nodi alla fine di questo ciclo
 
     }
-    for(int k=0; k<dim; k++)pathsum=pathsum+q[k].w;             //sommo tutti i pesi finali
+    for(__uint32_t k=0; k<dim; k++)pathsum=pathsum+q[k].w;             //sommo tutti i pesi finali
     //printf("pathsum di questa matrice: %lu\n", pathsum);
     return pathsum;
 }
 
 int main()
 {
-    int dim=0, k=0;
-    __uint64_t path=0; path++; //da eliminare
+    clock_t time=clock();
+    __uint32_t dim=0, k=0;
     int i = 0, j=0;
     //prendo in ingresso dim
     char d[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     char f, t;
 
     do {
-        d[i] = getchar();
+        d[i] = getchar_unlocked();
         i++;
     } while (d[i - 1] != ' ');
-    dim = atoi(d);
+    //dim = atoi(d);
+    dim = convert(d, i-1);
     //prendo in ingresso k
-    for (i = 0; i < 10; i++)d[i] = 0;
+    //for (i = 0; i < 10; i++)d[i] = 0;
+    d[0]=0; d[1]=0; d[2]=0; d[3]=0; d[4]=0; d[5]=0; d[6]=0; d[7]=0; d[8]=0; d[9]=0;
     i = 0;
     do {
-        d[i] = getchar();
+        d[i] = getchar_unlocked();
         i++;
     } while (d[i - 1] != '\n');
-    k = atoi(d);
+    k = convert(d, i-1);
+    //k=atoi(d);
 
     mat* lista_mat;
     lista_mat=malloc(sizeof(mat));
@@ -164,9 +180,9 @@ int main()
     p.k=k;
     p.n=0;
 
+    int c;
 
-
-    f = getchar();
+    f = getchar_unlocked();
     //input da file
     while (f != EOF){
         if (f == 'A'){
@@ -177,12 +193,12 @@ int main()
                 for(j=0; j<dim; j++)
                 {
                     __uint8_t flag=0;
-                    for(int c=0; c<10 && flag==0; c++) {
-                        t = getchar();
+                    for(c=0; c<10 && flag==0; c++) {
+                        t = getchar_unlocked();
                         if (t != ',' && t != '\n' && t != EOF) d[c] = t;
                         else flag=1;
                     }
-                    if(i!=j) m[i][j]=atoi(d);
+                    if(i!=j) m[i][j]=convert(d,c-1);
                     else m[i][j]=0;
                     for (int l = 0; l< 10; l++)d[l] = 0;
                 }
@@ -197,9 +213,9 @@ int main()
             else printf("\n");
             fseek(stdin, 4, SEEK_CUR);
         }
-        f = getchar();
+        f = getchar_unlocked();
     }
 
-    //printf("\n\ntime: %f\n", (float) (clock()-time)/CLOCKS_PER_SEC);   //stampa pathsum e tempo impiegato
+    printf("time: %f\n", (float) (clock()-time)/CLOCKS_PER_SEC);   //stampa pathsum e tempo impiegato
     return 0;
 }
