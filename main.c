@@ -1,38 +1,39 @@
 #include<stdio.h>
 //#include<time.h>
+#define flush_d d[0]=0; d[1]=0; d[2]=0; d[3]=0; d[4]=0; d[5]=0; d[6]=0; d[7]=0; d[8]=0; d[9]=0; d[10]=0; d[11]=0; d[12]=0; d[13]=0; d[14]=0; d[15]=0; d[16]=0; d[17]=0; d[18]=0; d[19]=0;
 #include <stdlib.h>
 typedef struct nodo{
-    __uint32_t w;
+    __uint64_t w;
     __uint8_t visited;
-    __uint32_t key;
+    __uint64_t key;
 } nodo_t;
 typedef struct matrice{
-    __uint32_t key;
+    __uint64_t key;
     __uint64_t w;
     struct matrice *next;
 } mat;
 typedef struct l{
-    __uint32_t n;
+    __uint64_t n;
     mat* head;
-    __uint32_t k;
+    __uint64_t k;
 } lista;
 
-inline static __uint32_t convert(char s[], __uint8_t dim)__attribute__((always_inline));
+inline static __uint64_t convert(char s[], __uint8_t dim)__attribute__((always_inline));
 
-__uint32_t convert(char s[], __uint8_t dim)
+__uint64_t convert(char s[], __uint8_t dim)
 {
-    __uint32_t n=0;
-    for(__uint8_t i=0; i<dim && s[i]!=0; i++)
+    __uint64_t n=0;
+    for(__uint8_t i=0; i<dim; i++)
     {
         n=(n<<1)+(n<<3)+((int)s[i]-48);
     }
     return n;
 }
 //inserisce in *indmin l'indice del nodo non visitato con peso minore
-__uint32_t sortMin(nodo_t *q, __uint32_t dim){
+__uint64_t sortMin(nodo_t *q, __uint64_t dim){
     __uint8_t flag=0;
-    __uint32_t indmin=0;
-    for(__uint32_t j=1; j<dim; j++)
+    __uint64_t indmin=0;
+    for(__uint64_t j=1; j<dim; j++)
     {
         if(q[j].w != 0) {
             if (indmin == 0 && q[j].visited == 0){
@@ -48,7 +49,7 @@ __uint32_t sortMin(nodo_t *q, __uint32_t dim){
     if(!flag)
     {
         flag = 0;
-        for(__uint32_t j=1; j<dim && flag==0; j++)
+        for(__uint64_t j=1; j<dim && flag==0; j++)
         {
             if(q[j].w == 0 && q[j].visited == 0)
             {
@@ -58,8 +59,6 @@ __uint32_t sortMin(nodo_t *q, __uint32_t dim){
         }
     }
     //se no mi andava bene l'indirizzo nuovo e lo metto in *indmin
-    //stampo il nodo che dijkstra sta per visitare (debug)
-    //printf("nodo considerato: %d        ", indmin);
     return indmin;
 }
 
@@ -73,19 +72,20 @@ void insertPath(__uint64_t pathlength, mat **lista_mat, lista *p){
 
         (*lista_mat)->next=malloc(sizeof(mat));
         *lista_mat=(*lista_mat)->next;
+        (*lista_mat)->next=NULL;
     }
     else
     {
         *lista_mat=p->head;
 
         while((*lista_mat)!=NULL)
-            {
+        {
             if((*lista_mat)->w > max->w)
             {
                 max=*lista_mat;
             }
             *lista_mat=(*lista_mat)->next;
-            }
+        }
         if(pathlength < max->w){
             max->w=pathlength;
             max->key=p->n;
@@ -96,26 +96,25 @@ void insertPath(__uint64_t pathlength, mat **lista_mat, lista *p){
 void printTopk(lista *p){
     //printf("\noutput topK: ");
     mat* lista_mat = p->head;
-    __uint32_t n = p->k;
+    __uint64_t n = p->k;
     if (p->n < n) n = p->n;
     if (lista_mat != NULL){
-        printf("%d", lista_mat->key);
+        printf("%ld", lista_mat->key);
         lista_mat=lista_mat->next;
     }
-    for(__uint32_t i=1; i<n; i++)
+    for(__uint64_t i=1; i<n; i++)
     {
-        printf(" %d", lista_mat->key);
+        printf(" %ld", lista_mat->key);
         lista_mat=lista_mat->next;
     }
     printf("\n");
 }
 
-__uint64_t dijkstra(__uint32_t dim, __uint32_t m[dim][dim]){
-    __uint64_t pathsum=0;
-    __uint32_t indmin=0, countvisited=dim;
-    nodo_t *q;
-    __uint32_t i, j;
-
+__uint128_t dijkstra(__uint32_t dim, __uint32_t m[dim][dim]){
+    __uint128_t pathsum=0;
+    __uint64_t indmin=0, countvisited=dim;
+    nodo_t *q=NULL;
+    __uint64_t i, j;
     q = malloc((dim)*sizeof(nodo_t));          //alloco spazio per la coda
     q[0].w=0; q[0].visited=1; q[0].key=0;      //inizializzo nodo 0 in coda
     for(i=0; i<dim; i++)                    //inizializzo altri nodi in coda inserendo la prima riga della matrice
@@ -136,17 +135,19 @@ __uint64_t dijkstra(__uint32_t dim, __uint32_t m[dim][dim]){
         countvisited--;                         //diminuisco contatore nodi da verificare; devo cambiarlo è una stronzata ma vbb
 
     }
-    for(__uint32_t k=0; k<dim; k++)pathsum=pathsum+q[k].w;             //sommo tutti i pesi finali
+    for(__uint64_t k=0; k<dim; k++)pathsum=pathsum+q[k].w;             //sommo tutti i pesi finali
     //printf("pathsum di questa matrice: %lu\n", pathsum);
+    free(q);
+    q=NULL;
     return pathsum;
 }
 
 int main()
 {
-    __uint32_t dim, k;
+    __uint64_t dim, k;
     __uint32_t i, j;
-    __uint8_t c=0;
-    char d[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    __uint8_t c=0, flag;
+    char d[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     char f, t;
     //input dim
     do {
@@ -155,7 +156,7 @@ int main()
     } while (d[c - 1] != ' ');
     dim = convert(d, c-1);
     //prendo in ingresso k
-    d[0]=0; d[1]=0; d[2]=0; d[3]=0; d[4]=0; d[5]=0; d[6]=0; d[7]=0; d[8]=0; d[9]=0;
+    flush_d
     c = 0;
     do {
         d[c] = getchar_unlocked();
@@ -163,7 +164,7 @@ int main()
     } while (d[c - 1] != '\n');
     k = convert(d, c-1);
 
-    mat* lista_mat;
+    mat* lista_mat=NULL;
     lista_mat=malloc(sizeof(mat));
 
     __uint32_t m[dim][dim];
@@ -178,12 +179,12 @@ int main()
     while (f != EOF){
         if (f == 'A'){
             fseek(stdin, 13, SEEK_CUR);
-            d[0]=0; d[1]=0; d[2]=0; d[3]=0; d[4]=0; d[5]=0; d[6]=0; d[7]=0; d[8]=0; d[9]=0;
+            flush_d
             for(i=0; i<dim; i++)
             {
                 for(j=0; j<dim; j++)
                 {
-                    __uint8_t flag=0;
+                    flag=0;
                     for(c=0; c<10 && flag==0; c++) {
                         t = getchar_unlocked();
                         if (t != ',' && t != '\n' && t != EOF) d[c] = t;
@@ -191,7 +192,7 @@ int main()
                     }
                     if(i!=j) m[i][j]=convert(d,c-1);
                     else m[i][j]=0;
-                    d[0]=0; d[1]=0; d[2]=0; d[3]=0; d[4]=0; d[5]=0; d[6]=0; d[7]=0; d[8]=0; d[9]=0;
+                    flush_d
                 }
             }
             insertPath(dijkstra(dim, m),&lista_mat,&p);

@@ -34,7 +34,7 @@ __uint32_t fastAtoi(const char *str) {
 }
 
 //inserisce in *indmin topk_head'indice del pqueue_node non visitato con peso minore
-int sortMin(pqueue_node *q, int dim) {
+int sortMin(pqueue_node *q, __uint32_t dim) {
     __uint8_t flag = 0;
     __uint32_t min_index = 0;
 
