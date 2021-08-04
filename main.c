@@ -110,8 +110,8 @@ void printTopk(lista *p){
     printf("\n");
 }
 
-__uint128_t dijkstra(__uint32_t dim, __uint32_t m[dim][dim]){
-    __uint128_t pathsum=0;
+__uint64_t dijkstra(__uint32_t dim, __uint32_t m[dim][dim]){
+    __uint64_t pathsum=0;
     __uint64_t indmin=0, countvisited=dim;
     nodo_t *q=NULL;
     __uint64_t i, j;
