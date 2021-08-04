@@ -17,9 +17,9 @@ typedef struct topk_node {
 } topk_node;
 //graph topK ranking head
 typedef struct topk_head {
-    int n;
+    __uint32_t n;
     topk_node *topk_list;
-    int k;
+    __uint32_t k;
 } topk_head;
 
 // fast atoi declaration, to be inlined by gcc, callable function won't be compiled
