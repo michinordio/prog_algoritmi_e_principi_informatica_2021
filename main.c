@@ -1,213 +1,308 @@
 #include<stdio.h>
-//#include<time.h>
-#define flush_d d[0]=0; d[1]=0; d[2]=0; d[3]=0; d[4]=0; d[5]=0; d[6]=0; d[7]=0; d[8]=0; d[9]=0; d[10]=0; d[11]=0; d[12]=0; d[13]=0; d[14]=0; d[15]=0; d[16]=0; d[17]=0; d[18]=0; d[19]=0;
-#include <stdlib.h>
-typedef struct nodo{
-    __uint64_t w;
-    __uint8_t visited;
-    __uint64_t key;
-} nodo_t;
-typedef struct matrice{
+#include<stdlib.h>
+
+
+typedef struct {
     __uint64_t key;
     __uint64_t w;
-    struct matrice *next;
-} mat;
-typedef struct l{
-    __uint64_t n;
-    mat* head;
-    __uint64_t k;
-} lista;
+} type_heap;
 
-inline static __uint64_t convert(char s[], __uint8_t dim)__attribute__((always_inline));
+__uint64_t n=0, k=0, mat_index=0;
 
-__uint64_t convert(char s[], __uint8_t dim)
+void topk(type_heap *heap)
 {
-    __uint64_t n=0;
-    for(__uint8_t i=0; i<dim; i++)
+    __uint64_t dim_heap= k>mat_index ? mat_index:k;
+    for(__uint64_t i=0; i<dim_heap-1; i++)
     {
-        n=(n<<1)+(n<<3)+((int)s[i]-48);
+        printf("%ld ", heap[i].key);
     }
-    return n;
+    printf("%ld\n", heap[dim_heap-1].key);
 }
-//inserisce in *indmin l'indice del nodo non visitato con peso minore
-__uint64_t sortMin(nodo_t *q, __uint64_t dim){
+
+void max_bubble_up(type_heap *heap)
+{
+    __uint64_t index=mat_index, f_index;
     __uint8_t flag=0;
-    __uint64_t indmin=0;
-    for(__uint64_t j=1; j<dim; j++)
-    {
-        if(q[j].w != 0) {
-            if (indmin == 0 && q[j].visited == 0){
-                indmin = j;
-                flag = 1;
-            }
-            if ((q[j].w < q[indmin].w) && (q[j].visited == 0) && (q[j].w != 0)) {
-                indmin = j;
-                flag = 1;
-            }
+    type_heap temp;
+    while(!flag){
+        f_index=(index-1) >> 1;
+        if(f_index==0) flag=1;
+        if(heap[index].w>heap[f_index].w){
+            temp=heap[index];           //temp <- figlio
+            heap[index]=heap[f_index];  //figlio <- padre
+            heap[f_index]=temp;         //padre <- temp
         }
-    }
-    if(!flag)
-    {
-        flag = 0;
-        for(__uint64_t j=1; j<dim && flag==0; j++)
-        {
-            if(q[j].w == 0 && q[j].visited == 0)
-            {
-                indmin=j;
-                flag=1;
-            }
-        }
-    }
-    //se no mi andava bene l'indirizzo nuovo e lo metto in *indmin
-    return indmin;
-}
+        else flag=1;
 
-void insertPath(__uint64_t pathlength, mat **lista_mat, lista *p){
-    mat* max;
-    max=p->head;
-    if(p->n < p->k)
-    {
-        (*lista_mat)->w=pathlength;
-        (*lista_mat)->key=p->n;
-
-        (*lista_mat)->next=malloc(sizeof(mat));
-        *lista_mat=(*lista_mat)->next;
-        (*lista_mat)->next=NULL;
-    }
-    else
-    {
-        *lista_mat=p->head;
-
-        while((*lista_mat)!=NULL)
-        {
-            if((*lista_mat)->w > max->w)
-            {
-                max=*lista_mat;
-            }
-            *lista_mat=(*lista_mat)->next;
-        }
-        if(pathlength < max->w){
-            max->w=pathlength;
-            max->key=p->n;
-        }
+        index=f_index;
     }
 }
 
-void printTopk(lista *p){
-    //printf("\noutput topK: ");
-    mat* lista_mat = p->head;
-    __uint64_t n = p->k;
-    if (p->n < n) n = p->n;
-    if (lista_mat != NULL){
-        printf("%ld", lista_mat->key);
-        lista_mat=lista_mat->next;
-    }
-    for(__uint64_t i=1; i<n; i++)
+void max_bubble_down(type_heap *heap)
+{
+    __uint64_t f_index=0, sx_index, dx_index, max_ind;
+    __uint8_t flag=0;
+    type_heap temp;
+    __uint64_t dim_heap=(mat_index+1)<k ? (mat_index+1):k;
+    while(!flag)
     {
-        printf(" %ld", lista_mat->key);
-        lista_mat=lista_mat->next;
+        sx_index=(f_index << 1)+1;
+        dx_index=sx_index+1;
+        max_ind=f_index;
+        if(dx_index<dim_heap){     //entrambi i figli esistono
+
+            if(heap[sx_index].w>heap[max_ind].w) max_ind=sx_index;
+            if(heap[dx_index].w>heap[max_ind].w) max_ind=dx_index;
+        }
+        else if(sx_index<dim_heap){            //esiste solo il figlio sinistro
+            if(heap[sx_index].w>heap[f_index].w) max_ind=sx_index;
+        }
+        else flag=1;            //non esistono figli
+
+        if(max_ind==f_index) flag=1;
+        else{
+            temp=heap[f_index];   //temp <- padre
+            heap[f_index]=heap[max_ind];
+            heap[max_ind]=temp;
+        }
+        f_index=max_ind;
     }
-    printf("\n");
 }
 
-__uint64_t dijkstra(__uint32_t dim, __uint32_t m[dim][dim]){
-    __uint64_t pathsum=0;
-    __uint64_t indmin=0, countvisited=dim;
-    nodo_t *q=NULL;
-    __uint64_t i, j;
-    q = malloc((dim)*sizeof(nodo_t));          //alloco spazio per la coda
-    q[0].w=0; q[0].visited=1; q[0].key=0;      //inizializzo nodo 0 in coda
-    for(i=0; i<dim; i++)                    //inizializzo altri nodi in coda inserendo la prima riga della matrice
-        {
-        q[i].w=m[0][i];
-        q[i].visited=0;
-        q[i].key=i;
+void insert_pathsum(__uint64_t pathsum, type_heap *heap)
+{
+    __uint64_t dim_corrente=mat_index+1;
+    if(dim_corrente<=k){         //se classifica non ancora piena
+        heap[mat_index].w=pathsum;
+        heap[mat_index].key=mat_index;
+        if(mat_index>0){
+            max_bubble_up(heap);
         }
-    while(countvisited!=0)
-    {
-        indmin = sortMin(q,dim);             //funzione che salva in indmin l'indice del nodo con peso minore
-        for(j=1; j<dim; j++)                //scorro riga indmin con cursore j (considero quindi i nodi adiacenti al nodo indmin)
-            {
-            if((q[j].w>m[indmin][j]+q[indmin].w || (q[j].w==0 && q[j].key!=0)) && m[indmin][j]!=0 && j!=indmin && q[j].visited==0)     // sostituisci se (peso_j>arco(indmin,j)+peso_indmin VEL peso_j==0) E arco!=0 E j!=indmin (no autoanello)
-                q[j].w=m[indmin][j]+q[indmin].w;
-            }
-        q[indmin].visited=1;                    //marco nodo indmin come visitato
-        countvisited--;                         //diminuisco contatore nodi da verificare; devo cambiarlo è una stronzata ma vbb
-
     }
-    for(__uint64_t k=0; k<dim; k++)pathsum=pathsum+q[k].w;             //sommo tutti i pesi finali
-    //printf("pathsum di questa matrice: %lu\n", pathsum);
-    free(q);
-    q=NULL;
+    else{                   //classifica piena
+        if(pathsum<heap[0].w){         //se il nuovo pathsum è minore del massimo sostituisci e scorri in basso
+            heap[0].w=pathsum;
+            heap[0].key=mat_index;
+            max_bubble_down(heap);
+        }
+    }
+    //bdab
+}
+
+/**
+ * scambio elemento di testa e elemento di coda
+ * @param heap  puntatore all'heap
+ * @param heap_dimension dimensione dell'heap
+ */
+void min_pop_and_bubble_down(type_heap *heap, __uint64_t* heap_dimension)
+{
+    __uint64_t dim_heap = *heap_dimension - 1;
+
+    __uint64_t f_index=0, dx_index, sx_index, min_ind;
+    __uint8_t flag=0;
+    type_heap temp;
+    temp=heap[0]; //temp <- testa
+    heap[0]=heap[dim_heap]; //testa <- coda
+    heap[dim_heap]=temp;// coda <- temp
+
+    (*heap_dimension)--;
+    if (dim_heap == 0) {
+        return;
+    } else {
+        dim_heap--;
+    }
+
+    while(!flag)
+    {
+        sx_index=(f_index << 1)+1;
+        dx_index=sx_index+1;
+
+        if(dx_index<=dim_heap){     //entrambi i figli esistono
+            if(heap[sx_index].w==0 && heap[dx_index].w==0) {
+                flag=1;    //entrambi i figli 0 -> non fare nulla
+            }
+            else if(heap[f_index].w==0){            //se il padre è 0
+                if(heap[dx_index].w==0) {
+                    min_ind=sx_index;           //se il dx è 0, il sx è il min
+                }
+                else if(heap[sx_index].w==0) {
+                    min_ind=dx_index;          //contrario
+                }
+                else {
+                    min_ind = heap[sx_index].w<heap[dx_index].w ? sx_index : dx_index;    //se nessuno dei due è 0, confronta sgravatissimo
+                }
+            }
+            else{
+                if(heap[sx_index].w==0) {
+                    min_ind = heap[dx_index].w<heap[f_index].w ? dx_index : f_index; // sx uguale a 0, min_ind è min tra dx e padre
+                }
+                else if(heap[dx_index].w==0) {
+                    min_ind = heap[sx_index].w<heap[f_index].w ? sx_index : f_index; // dx uguale a 0, min_ind è min tra sx e padre
+                }
+                else{                                                                       //nessuno dei 3 è uguale a 0 fuck
+                    min_ind=f_index;
+                    if(heap[sx_index].w<heap[min_ind].w) {
+                        min_ind=sx_index;
+                    }
+                    if(heap[dx_index].w<heap[min_ind].w) {
+                        min_ind=dx_index;
+                    }
+                }
+            }
+        }
+        else if(sx_index<=dim_heap){            //esiste solo il figlio sinistro
+            if(heap[f_index].w==0 && heap[sx_index].w==0) {
+                flag=1;       //padre e unico figlio uguali a 0
+            }
+            else if(heap[f_index].w==0) {
+                min_ind=sx_index;               //padre =0
+            }
+            else if(heap[sx_index].w==0){
+                min_ind=f_index;               //figlio =0
+            }
+            else {
+                min_ind = heap[sx_index].w<heap[f_index].w ? sx_index : f_index;       //entrambi >0, confronta
+            }
+        }
+        else flag=1;            //non esistono figli
+
+        if(!flag){
+            if(min_ind==f_index) flag=1;
+            else{
+                temp=heap[f_index];     //temp <- padre
+                heap[f_index]=heap[min_ind];   //padre <- figlio
+                heap[min_ind]=temp;       //figlio <- temp
+            }
+        }
+        f_index = min_ind;
+    }
+}
+
+void min_bubble_up(type_heap *heap, __uint64_t index)
+{
+    __uint8_t flag=0;
+    __uint64_t f_index;
+    type_heap temp;
+    while(!flag)
+    {
+        f_index=(index - 1) >> 1;
+        if(f_index == 0) flag=1;
+        if(heap[f_index].w == 0 || heap[index].w < heap[f_index].w){
+            temp=heap[index]; //temp <- figlio
+            heap[index]=heap[f_index]; //figlio <- padre
+            heap[f_index]=temp; //padre <- temp
+        }
+        else flag=1;
+        index=f_index;
+    }
+}
+
+__uint64_t dijkstra(__uint64_t dim, __uint32_t m[n][n], type_heap *v)
+{
+    __uint64_t dim_heap=dim-1, pathsum=0;
+    __uint64_t distance_from_j, distance_of_j_from_0, i_weight, new_tot_distance, i_key, j_key;
+
+    //heap_init
+    __uint64_t curs_heap=0;
+    for(__uint64_t curs_m=1; curs_m<dim; curs_m++){
+        v[curs_heap].key=curs_m;
+        v[curs_heap].w=m[0][curs_m];
+        if(m[0][curs_m]!=0 && curs_heap!=0) min_bubble_up(v, curs_heap);
+        curs_heap++;
+    }
+  
+    for(__uint64_t i=0; i<dim_heap; )
+    {
+        if (v[0].w == 0) return pathsum; //questo non dovrebbe stare fuori dal for?
+        pathsum+=v[0].w;
+        i_weight=v[0].w;               //peso (definitivo) di v[0]
+        i_key=v[0].key;             //chiave di v[0]
+        for(__uint64_t j=1; j<dim_heap; j++){
+
+            j_key=v[j].key;
+            distance_from_j=m[i_key][j_key];              //arco tra elemento visitato v[0] i_key elemento ispezionato v[j]
+            distance_of_j_from_0=v[j].w;                  //peso corrente di v[j]
+            new_tot_distance=distance_from_j + i_weight;  //peso alternativo di v[j]=peso di v[0] + arco tra v[0] i_key v[j]
+            if (
+                distance_from_j != 0 && // Il nodo è raggiungibile da dove sono ora E
+                (
+                    distance_of_j_from_0 == 0 || // Il nodo PRIMA NON era raggiungibile, ma ORA SI    OPPURE
+                    new_tot_distance < distance_of_j_from_0
+                )
+            )
+            { // Miglioro la distanza per raggiungere j
+                v[j].w=new_tot_distance;
+                min_bubble_up(v, j);
+            }
+        }
+        min_pop_and_bubble_down(v, &dim_heap);
+    }
     return pathsum;
 }
 
 int main()
 {
-    __uint64_t dim, k;
-    __uint32_t i, j;
-    __uint8_t c=0, flag;
-    char d[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    char f, t;
-    //input dim
-    do {
-        d[c] = getchar_unlocked();
-        c++;
-    } while (d[c - 1] != ' ');
-    dim = convert(d, c-1);
-    //prendo in ingresso k
-    flush_d
-    c = 0;
-    do {
-        d[c] = getchar_unlocked();
-        c++;
-    } while (d[c - 1] != '\n');
-    k = convert(d, c-1);
+    __uint64_t dim=0, i, j, pathsum=0;
+    __uint8_t flag=0;
+    char t;
+    char stringa[30];
+    //input dim e k
+    while(flag==0){
+        t=getchar_unlocked();
+        if(t==' ') flag=1;
+        else dim=(dim << 1)+(dim << 3)+(t-48);
+    }
+    flag=0;
+    n=dim;
+    while(flag==0){
+        t=getchar_unlocked();
+        if(t=='\n' || t=='\r') flag=1;
+        else k=(k << 1)+(k << 3)+(t-48);
+    }
+    while (t != '\n') {
+        //printf("CARATTERE LETTO: %c", t);
+        t = getchar_unlocked();
+    }
 
-    mat* lista_mat=NULL;
-    lista_mat=malloc(sizeof(mat));
-
+    //ora che ho dim, dichiaro la matrice
     __uint32_t m[dim][dim];
 
-    lista p;
-    p.head=lista_mat;
-    p.k=k;
-    p.n=0;
+    type_heap *v;
+    v = malloc((dim-1) * sizeof(type_heap));
 
-    f = getchar_unlocked();
+    type_heap *heap;
+    heap=malloc(k * sizeof(type_heap));
+
     //input da file
-    while (f != EOF){
-        if (f == 'A'){
-            fseek(stdin, 13, SEEK_CUR);
-            flush_d
+    while (fgets(stringa, 20, stdin)){
+        if (stringa[0] == 'A'){
             for(i=0; i<dim; i++)
             {
                 for(j=0; j<dim; j++)
                 {
-                    flag=0;
-                    for(c=0; c<10 && flag==0; c++) {
+                    m[i][j] = 0;
+                    t = getchar_unlocked();
+                    while(t >= '0' && t <= '9'){
+                        m[i][j]= (m[i][j] << 3) + (m[i][j] << 1) + (t -'0');
                         t = getchar_unlocked();
-                        if (t != ',' && t != '\n' && t != EOF) d[c] = t;
-                        else flag=1;
                     }
-                    if(i!=j) m[i][j]=convert(d,c-1);
-                    else m[i][j]=0;
-                    flush_d
+                    if(i==j || j==0) m[i][j]=0;
+                    if (t == '\r') t = getchar_unlocked();
                 }
             }
-            insertPath(dijkstra(dim, m),&lista_mat,&p);
-            p.n++;
-        }
-        else if (f == 'T'){
-            if(p.n!=0){
-                printTopk(&p);
-            }
-            else printf("\n");
-            fseek(stdin, 4, SEEK_CUR);
-        }
-        f = getchar_unlocked();
-    }
 
-    //printf("\n\ntime: %f\n", (float) (clock()-time)/CLOCKS_PER_SEC);   //stampa pathsum e tempo impiegato
+            pathsum=dijkstra(dim, m, v);
+            //printf("Matrice %ld ha peso di grafo: %ld.\n", mat_index, pathsum);
+            insert_pathsum(pathsum, heap);
+            pathsum=0;
+            mat_index++;
+        }
+        else if(stringa[0]=='T'){
+            //printf("\ntopk chiamato\n\n");
+            if(mat_index!=0) topk(heap);
+            else printf("\n");
+            //fseek(stdin, 4, SEEK_CUR);
+        }
+    }
     return 0;
 }
